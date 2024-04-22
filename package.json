@@ -14,6 +14,7 @@
     "eslint-plugin-disable-variables-odd-lines": "github:sumthief/eslint-plugin-disable-variables-odd-lines",
     "eslint-plugin-max-variables": "github:vera-l/eslint-plugin-max-variables",
     "eslint-plugin-no-if-use-switch": "github:OliverWall/eslint-plugin-no-if-use-switch",
+    "eslint-plugin-odd-even-lines": "github:ipetropolsky/eslint-plugin-odd-even-lines",
     "eslint-plugin-secure-names": "github:vera-l/eslint-plugin-secure-names",
     "eslint-plugin-sort-vars-alphabetical": "github:OliverWall/eslint-plugin-sort-vars-alphabetical",
     "eslint-rule": "github:potapov-ev/eslint-rule",
