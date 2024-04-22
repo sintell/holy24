@@ -14,12 +14,6 @@ const maxVariablesPlugin = require("eslint-plugin-max-variables");
 
 let STATS = { eslint: {}, mocha: {} };
 
-const mocha = new Mocha({ timeout: 1000, reporter: "list" });
-mocha.cleanReferencesAfterRun(false);
-
-const testPath = path.join(__dirname, "test", "ch01.test.js");
-mocha.addFile(testPath);
-
 async function main() {
   const eslint = new ESLint({
     overrideConfigFile: true,
@@ -45,6 +39,12 @@ async function main() {
     },
   });
 
+  const mocha = new Mocha({ timeout: 1000, reporter: "list" });
+  const testPath = path.join(__dirname, "test", "ch01.test.js");
+  const codePath = path.join(__dirname, "challenges", "ch01.js");
+
+  mocha.addFile(testPath);
+  mocha.addFile(codePath);
   // 2. Lint files.
   const eslinted = await eslint.lintFiles(["challenges/**/*0[1-9].js"]);
   const formatter = await eslint.loadFormatter("stylish");
@@ -72,7 +72,7 @@ async function main() {
 }
 
 // run http server and start serving global object on port 3000
-const server = require("http").createServer().listen(3001);
+const server = require("http").createServer().listen(3001, "127.0.0.1");
 server.on("request", (req, res) => {
   console.log(req.url);
   switch (req.url) {
