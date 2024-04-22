@@ -1,0 +1,23 @@
+{
+  "name": "holy2024",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "antki",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "eslint": "^9.1.0",
+    "eslint-plugin-disable-variables-odd-lines": "github:sumthief/eslint-plugin-disable-variables-odd-lines",
+    "eslint-plugin-max-variables": "github:vera-l/eslint-plugin-max-variables",
+    "eslint-plugin-no-if-use-switch": "github:OliverWall/eslint-plugin-no-if-use-switch",
+    "eslint-plugin-secure-names": "github:vera-l/eslint-plugin-secure-names",
+    "eslint-plugin-sort-vars-alphabetical": "github:OliverWall/eslint-plugin-sort-vars-alphabetical",
+    "eslint-rule": "github:potapov-ev/eslint-rule",
+    "jasmine": "^5.1.0",
+    "mocha": "^10.4.0"
+  }
+}
