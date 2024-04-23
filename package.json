@@ -9,7 +9,11 @@
   "author": "antki",
   "license": "ISC",
   "dependencies": {
+    "@inquirer/confirm": "^3.1.5",
+    "@inquirer/input": "^2.1.5",
+    "@inquirer/select": "^2.3.1",
     "chokidar": "^3.6.0",
+    "console-gui-tools": "^3.5.0",
     "eslint": "^9.1.0",
     "eslint-plugin-disable-variables-odd-lines": "github:sumthief/eslint-plugin-disable-variables-odd-lines",
     "eslint-plugin-max-variables": "github:vera-l/eslint-plugin-max-variables",
@@ -18,7 +22,10 @@
     "eslint-plugin-secure-names": "github:vera-l/eslint-plugin-secure-names",
     "eslint-plugin-sort-vars-alphabetical": "github:OliverWall/eslint-plugin-sort-vars-alphabetical",
     "eslint-rule": "github:potapov-ev/eslint-rule",
+    "handlebars": "^4.7.8",
+    "install": "^0.13.0",
     "jasmine": "^5.1.0",
-    "mocha": "^10.4.0"
+    "mocha": "^10.4.0",
+    "npm": "^10.5.2"
   }
 }

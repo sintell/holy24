@@ -1,115 +1,40 @@
-const { ESLint } = require("eslint");
-const Mocha = require("mocha");
-const chokidar = require("chokidar");
+const cli = require("./cli");
+const server = require("./server");
 const fs = require("fs");
-const path = require("path");
 
-const oddEvenLinesPlugin = require("eslint-plugin-odd-even-lines");
-const secureVariablesPlugin = require("eslint-plugin-secure-names");
-const disableOddLinesPlugin = require("eslint-plugin-disable-variables-odd-lines");
-const noIfUseSwitchPlugin = require("eslint-plugin-no-if-use-switch");
-const binaryVariablesPlugin = require("eslint-rule");
-const sortVariablesPlugin = require("eslint-plugin-sort-vars-alphabetical");
-const maxVariablesPlugin = require("eslint-plugin-max-variables");
-
-let STATS = { eslint: {}, mocha: {} };
-
-async function main() {
-  const eslint = new ESLint({
-    overrideConfigFile: true,
-    overrideConfig: {
-      plugins: {
-        "odd-even-lines": oddEvenLinesPlugin,
-        "secure-names": secureVariablesPlugin,
-        "disable-variables-odd-lines": disableOddLinesPlugin,
-        "no-if-use-switch": noIfUseSwitchPlugin,
-        "oi10-name-plugin": binaryVariablesPlugin,
-        "sort-vars-alphabetical": sortVariablesPlugin,
-        "max-variables": maxVariablesPlugin,
-      },
-      rules: {
-        "odd-even-lines/odd-even-lines": "error",
-        "secure-names/secure-names": ["error", { minLength: 5 }],
-        "disable-variables-odd-lines/disable-variables-odd-lines": "error",
-        "no-if-use-switch/no-if-use-switch": "error",
-        "oi10-name-plugin/oi10-name-plugin": "error",
-        "sort-vars-alphabetical/sort-vars-alphabetical": "error",
-        "max-variables/max-variables": "error",
-      },
-    },
-  });
-
-  const mocha = new Mocha({ timeout: 1000, reporter: "list" });
-  const testPath = path.join(__dirname, "test", "ch01.test.js");
-  const codePath = path.join(__dirname, "challenges", "ch01.js");
-
-  mocha.addFile(testPath);
-  mocha.addFile(codePath);
-  // 2. Lint files.
-  const eslinted = await eslint.lintFiles(["challenges/**/*0[1-9].js"]);
-  const formatter = await eslint.loadFormatter("stylish");
-  const eslintReult = formatter.format(eslinted);
-
-  const testsResult = await new Promise((resolve, reject) => {
-    // collect all test run results in array and pass to resolve
-    const tests = [];
-
-    const runner = mocha.run(() => resolve(tests));
-    runner.on("test", (stat) => {
-      tests.push(stat);
+async function cacheSource(sourcePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(sourcePath, "utf8", (err, source) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(source);
+      }
     });
   });
-  mocha.dispose();
-
-  STATS.eslint = { failed: eslinted[0].errorCount };
-  STATS.mocha = {
-    total: testsResult.length,
-    failed: testsResult.filter((t) => t.state === "failed").length,
-  };
-
-  //write all results to global object
-  console.log(eslintReult);
 }
 
-// run http server and start serving global object on port 3000
-const server = require("http").createServer().listen(3001, "127.0.0.1");
-server.on("request", (req, res) => {
-  console.log(req.url);
-  switch (req.url) {
-    case "/":
-      res.writeHead(200, { "Content-Type": "text/html" });
-      fs.readFile("web/index.html", (err, data) => {
-        if (err) throw err;
-        res.end(data, "utf8");
-      });
-      break;
+async function main() {
+  const { host, port, time, rules, challenge } = await cli.getAppSettings();
+  console.log({ host, port, time, rules, challenge });
 
-    case "/web/style.css":
-      res.writeHead(200, { "Content-Type": "text/css" });
-      fs.readFile("web/style.css", (err, data) => {
-        if (err) throw err;
-        res.end(data, "utf8");
-      });
-      break;
+  const { onStatsChange, stop } = server.run({ host, port });
 
-    case "/web/web.js":
-      res.writeHead(200, { "Content-Type": "application/javascript" });
-      fs.readFile("web/web.js", (err, data) => {
-        if (err) throw err;
-        res.end(data, "utf8");
-      });
-      break;
+  const source = await cacheSource(challenge.source);
 
-    case "/stats":
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(STATS));
-      break;
+  while (true) {
+    console.clear();
+    const { name, email } = await cli.getChallengeSettings();
 
-    default:
-      break;
+    const readyState = await cli.getReadyState(name);
+    if (readyState) {
+      const game = require("./game");
+      const score = await game.run(time, challenge, rules, onStatsChange);
+      await cli.getScoreConfirm(score);
+      console.clear();
+    }
+    fs.writeFile(challenge.source, source, () => {});
   }
-});
+}
 
-chokidar.watch("challenges/**/*0[1-9].js").on("change", async () => {
-  await main().catch(console.log);
-});
+main();
