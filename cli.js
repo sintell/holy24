@@ -31,7 +31,7 @@ module.exports = {
         {
           name: "Set 1",
           value: {
-            "max-variables/max-variables": "error",
+            "max-variables/max-variables": ["error", 3],
             "no-if-use-switch/no-if-use-switch": "error",
             "secure-names/secure-names": ["error", { minLength: 5 }],
             "odd-even-lines/odd-even-lines": "error",
@@ -45,7 +45,7 @@ module.exports = {
             "sort-vars-alphabetical/sort-vars-alphabetical": "error",
             "no-if-use-switch/no-if-use-switch": "error",
             "oi10-name-plugin/oi10-name-plugin": "error",
-            "max-variables/max-variables": "error",
+            "max-variables/max-variables": ["error", 3],
           },
           description:
             "Even-odd lines, binary-like variables, no-ifs, sort vars alphabetically",
@@ -57,7 +57,7 @@ module.exports = {
             "disable-variables-odd-lines/disable-variables-odd-lines": "error",
             "no-if-use-switch/no-if-use-switch": "error",
             "sort-vars-alphabetical/sort-vars-alphabetical": "error",
-            "max-variables/max-variables": "error",
+            "max-variables/max-variables": ["error", 3],
           },
           description: "All except binary-like vars",
         },
@@ -68,7 +68,7 @@ module.exports = {
             "disable-variables-odd-lines/disable-variables-odd-lines": "error",
             "no-if-use-switch/no-if-use-switch": "error",
             "sort-vars-alphabetical/sort-vars-alphabetical": "error",
-            "max-variables/max-variables": "error",
+            "max-variables/max-variables": ["error", 3],
           },
           description: "All except password vars",
         },
