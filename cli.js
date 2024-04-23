@@ -26,7 +26,7 @@ module.exports = {
       default: 1,
     });
     const rules = await select({
-      message: "Select challenge set",
+      message: "Select rules set",
       choices: [
         {
           name: "Set 1",
