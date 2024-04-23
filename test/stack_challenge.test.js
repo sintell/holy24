@@ -11,8 +11,8 @@ describe("new Stack", () => {
     const expected = [1, 3, 7];
     expected.forEach((el) => myStack.add(el));
 
-    assert.equal(myStack.items.length, expected.length);
-    assert.deepStrictEqual(myStack.items, expected);
+    assert.equal(myStack.size(), expected.length);
+    assert.equal(myStack.peek(), expected[expected.length - 1]);
   });
 
   it("должен удалять элементы по порядку", () => {

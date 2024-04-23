@@ -55,10 +55,15 @@ async function main(challenge, rules) {
 
   const testsResult = await new Promise((resolve, reject) => {
     const tests = [];
+    const errors = [];
 
-    const runner = mocha.run(() => resolve(tests));
+    const runner = mocha.run(() => resolve({ tests, errors }));
     runner.on("test", (stat) => {
       tests.push(stat);
+    });
+
+    runner.on("fail", (test, err) => {
+      errors.push({ test, err });
     });
   });
   mocha.dispose();
@@ -68,17 +73,16 @@ async function main(challenge, rules) {
 
   STATS.eslint = { failed: eslinted[0].errorCount, source: eslinted[0].source };
   STATS.mocha = {
-    total: testsResult.length,
-    failed: testsResult.filter((t) => t.state === "failed").length,
+    total: testsResult.tests.length,
+    failed: testsResult.errors.length,
   };
 }
 
 function drawGUI(GUI, PROGRESS) {
   const PAGE = new PageBuilder({ title: "Stats" });
-  PAGE.addRow(PROGRESS);
-  PAGE.addSpacer(2);
-
   PAGE.addRow(
+    PROGRESS,
+    { text: " " },
     { text: "ESLint:", color: "white" },
     { text: " " },
     {
@@ -107,21 +111,23 @@ function drawGUI(GUI, PROGRESS) {
 
   PAGE.addSpacer(2);
   if (STATS.mocha.failed > 0) {
-    TECH_STATS.mocha
-      .filter((t) => t.state === "failed")
-      .forEach((m) => {
-        PAGE.addRow({
-          text: `❌ ${m.parent.title} ${m.title}`,
-          color: "redBright",
-        });
-        m.body.split(/\n+/).forEach((l) => {
-          PAGE.addRow({
-            text: `\t${l}`,
-            color: "grey",
-          });
-        });
-        PAGE.addSpacer(1);
+    TECH_STATS.mocha.errors.forEach(({ test, err }) => {
+      PAGE.addRow({
+        text: `❌ ${test.parent.title} ${test.title}`,
+        color: "redBright",
       });
+      PAGE.addRow(
+        { text: `\tОшибка assert: `, color: "white" },
+        { text: err.message, color: "white" },
+      );
+      test.body.split(/\n+/).forEach((l) => {
+        PAGE.addRow({
+          text: `\t${l}`,
+          color: "grey",
+        });
+      });
+      PAGE.addSpacer(1);
+    });
   }
   GUI.setPage(PAGE);
 }
@@ -187,14 +193,24 @@ module.exports = {
     });
     const PROGRESS = new Progress({
       id: "time-progress",
+      thickness: 1,
       x: 1,
       y: 1,
-      units: "seconds",
+      length: 32,
+      units: "sec",
       theme: "dart",
       label: "∞ seconds left ",
+      max: 0,
+
       style: {
-        showPercentage: true,
+        showPercentage: false,
         showMinMax: false,
+        boxed: true,
+        showBorder: true,
+        showTitle: true,
+        theme: "precision",
+        color: "blue",
+        showValue: true,
       },
     });
 
@@ -204,18 +220,18 @@ module.exports = {
     STATS.totalTime = time * 60;
     const nowSec = Date.now() / 1000;
     const maxSec = nowSec + time * 60;
-    PROGRESS.setMax(time * 60);
+    PROGRESS.setMin(time * 60);
     const errorPopup = new ErrorPopup();
 
     const lock = new Promise((resolve) => {
       const guiInterval = setInterval(() => {
         const now = Date.now() / 1000;
-        const timeLeft = maxSec - now;
+        const timeLeft = Math.trunc(maxSec - now);
 
         STATS.timeLeft = timeLeft;
 
-        PROGRESS.setValue(Math.trunc(now - nowSec));
-        PROGRESS.setLabel(`${Math.trunc(timeLeft)} seconds left `);
+        PROGRESS.setValue(timeLeft);
+        PROGRESS.setLabel(`${timeLeft} seconds left `);
         if (STATS.globalError) {
           errorPopup.show(STATS.globalError);
         } else {

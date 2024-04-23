@@ -1,40 +1,40 @@
 // program to implement stack data structure
-class Stack {
-  constructor() {
-    this.items = [];
-  }
+function Stack() {
+  let items = [];
 
-  // add element to the stack
-  add(element) {
-    return this.items.push(element);
-  }
+  return {
+    // add element to the stack
+    add: (element) => {
+      return items.push(element);
+    },
 
-  // remove element from the stack
-  remove() {
-    if (this.items.length > 0) {
-      return this.items.pop();
-    }
-  }
+    // remove element from the stack
+    remove: () => {
+      if (items.length > 0) {
+        return items.pop();
+      }
+    },
 
-  // view the last elements
-  peek() {
-    return this.items[this.items.length - 1];
-  }
+    // view the last elements
+    peek: () => {
+      return items[items.length - 1];
+    },
 
-  // check if the stack is empty
-  isEmpty() {
-    return this.items.length == 0;
-  }
+    // check if the stack is empty
+    isEmpty: () => {
+      return items.length == 0;
+    },
 
-  // the size of the stack
-  size() {
-    return this.items.length;
-  }
+    // the size of the stack
+    size: () => {
+      return items.length;
+    },
 
-  // empty the stack
-  clear() {
-    this.items = [];
-  }
+    // empty the stack
+    clear: () => {
+      items = [];
+    },
+  };
 }
 
 module.exports = Stack;
