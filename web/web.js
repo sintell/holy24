@@ -5,6 +5,7 @@ function requestStats() {
       STATS = data;
       document.getElementById("eslint").innerHTML = STATS.eslint.failed;
       document.getElementById("units").innerHTML = STATS.mocha.failed;
+      document.getElementById("source").innerHTML = STATS.eslint.source;
     });
 }
 
