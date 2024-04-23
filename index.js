@@ -22,19 +22,18 @@ async function main() {
 
   const source = await cacheSource(challenge.source);
 
-  while (true) {
-    console.clear();
-    const { name, email } = await cli.getChallengeSettings();
+  console.clear();
+  const { name, email } = await cli.getChallengeSettings();
 
-    const readyState = await cli.getReadyState(name);
-    if (readyState) {
-      const game = require("./game");
-      const score = await game.run(time, challenge, rules, onStatsChange);
-      await cli.getScoreConfirm(score);
-      console.clear();
-    }
-    fs.writeFile(challenge.source, source, () => {});
+  const readyState = await cli.getReadyState(name);
+  if (readyState) {
+    const game = require("./game");
+    const score = await game.run(time, challenge, rules, onStatsChange);
+    await cli.getScoreConfirm(score);
+    console.clear();
   }
+  fs.writeFileSync(challenge.source, source);
+  stop();
 }
 
 main();

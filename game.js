@@ -9,6 +9,7 @@ const {
   CustomPopup,
   Progress,
   PageBuilder,
+  ButtonPopup,
 } = require("console-gui-tools");
 
 const oddEvenLinesPlugin = require("eslint-plugin-odd-even-lines");
@@ -22,37 +23,10 @@ const { title } = require("process");
 
 let STATS = { eslint: {}, mocha: {} };
 
-const GUI = new ConsoleManager({
-  title: "Headhunter HolyJS 2024 Challenge",
-  overrideConsole: true,
-  logPageSize: 10,
-  layoutOptions: {
-    fitHeight: false,
-    type: "single",
-    showTitle: true,
-    boxed: true,
-  },
-});
-const PROGRESS = new Progress({
-  id: "time-progress",
-  x: 1,
-  y: 1,
-  units: "seconds",
-  theme: "dart",
-  label: "∞ seconds left ",
-  style: {
-    showPercentage: true,
-    showMinMax: false,
-  },
-});
-
-GUI.on("exit", () => {
-  process.exit(0);
-});
-
-let TECH_STATS = { eslint: {}, mocha: {} };
+let TECH_STATS = { eslint: {}, mocha: {}, globalError: null };
 
 async function main(challenge, rules) {
+  STATS.globalError = null;
   const eslint = new ESLint({
     overrideConfigFile: true,
     overrideConfig: {
@@ -75,10 +49,9 @@ async function main(challenge, rules) {
     mocha.addFile(challenge.test);
     mocha.addFile(challenge.source);
   } catch (e) {
-    console.log(e);
+    STATS.globalError = e;
   }
   const eslinted = await eslint.lintFiles([challenge.source]);
-  console.log("done eslint");
 
   const testsResult = await new Promise((resolve, reject) => {
     const tests = [];
@@ -89,7 +62,6 @@ async function main(challenge, rules) {
     });
   });
   mocha.dispose();
-  console.log("done mocha");
 
   TECH_STATS.eslint = eslinted;
   TECH_STATS.mocha = testsResult;
@@ -101,8 +73,7 @@ async function main(challenge, rules) {
   };
 }
 
-function drawGUI() {
-  console.clear();
+function drawGUI(GUI, PROGRESS) {
   const PAGE = new PageBuilder({ title: "Stats" });
   PAGE.addRow(PROGRESS);
   PAGE.addSpacer(2);
@@ -115,12 +86,12 @@ function drawGUI() {
       color: STATS.eslint.failed > 0 ? "red" : "green",
     },
     { text: "\t\t" },
-    { text: "Mocha:", color: "white" },
+    { text: "Unit tests:", color: "white" },
     { text: " " },
     {
       text: `${STATS.mocha.failed > 0 ? `❌ ${STATS.mocha.total - STATS.mocha.failed}` : `✅ ${STATS.mocha.total}`}/${
         STATS.mocha.total
-      }`,
+      } tests passes`,
       color: STATS.mocha.failed > 0 ? "red" : "green",
     },
   );
@@ -155,20 +126,101 @@ function drawGUI() {
   GUI.setPage(PAGE);
 }
 
+function ErrorPopup(error) {
+  const p = new PageBuilder();
+  const popup = new CustomPopup({
+    title: "Невалидный код",
+    id: "source-error-popup",
+    content: p,
+    width: 32,
+    visible: false,
+  });
+
+  return {
+    show: (error) => {
+      p.addRow({ text: error.message, color: red });
+      error.stack.split("\n").forEach((l) => {
+        p.addRow({ text: l, color: "gray" });
+      });
+      popup.setContent(p);
+      popup.show();
+    },
+    hide: () => {
+      popup.hide();
+    },
+  };
+}
+
+function calculateScore(stats) {
+  const score = 100 - stats.eslint.failed * 5 - stats.mocha.failed * 10;
+  return Math.trunc(
+    score + (100 * stats.timeLeft * 100) / stats.totalTime / 100.0,
+  );
+}
+
+function ScorePopup(score, resolve) {
+  const popup = new ButtonPopup({
+    title: "Игра завершена",
+    id: "score-popup",
+    message: `Твой счёт: ${score}`,
+    buttons: ["Ok"],
+  })
+    .show()
+    .on("confirm", () => {
+      popup.hide();
+      resolve(score);
+    });
+}
+
 module.exports = {
   run: async (time, challenge, rules, onStatsChange) => {
+    const GUI = new ConsoleManager({
+      title: "Headhunter HolyJS 2024 Challenge",
+      overrideConsole: true,
+      logPageSize: 0,
+      layoutOptions: {
+        fitHeight: true,
+        type: "single",
+        showTitle: true,
+        boxed: true,
+      },
+    });
+    const PROGRESS = new Progress({
+      id: "time-progress",
+      x: 1,
+      y: 1,
+      units: "seconds",
+      theme: "dart",
+      label: "∞ seconds left ",
+      style: {
+        showPercentage: true,
+        showMinMax: false,
+      },
+    });
+
+    GUI.on("exit", () => {
+      process.exit(0);
+    });
+    STATS.totalTime = time * 60;
     const nowSec = Date.now() / 1000;
     const maxSec = nowSec + time * 60;
     PROGRESS.setMax(time * 60);
-    console.log("before lock");
+    const errorPopup = new ErrorPopup();
 
     const lock = new Promise((resolve) => {
       const guiInterval = setInterval(() => {
         const now = Date.now() / 1000;
         const timeLeft = maxSec - now;
 
+        STATS.timeLeft = timeLeft;
+
         PROGRESS.setValue(Math.trunc(now - nowSec));
         PROGRESS.setLabel(`${Math.trunc(timeLeft)} seconds left `);
+        if (STATS.globalError) {
+          errorPopup.show(STATS.globalError);
+        } else {
+          errorPopup.hide();
+        }
 
         if (
           (STATS.eslint.failed === 0 && STATS.mocha.failed === 0) ||
@@ -176,23 +228,22 @@ module.exports = {
         ) {
           clearInterval(guiInterval);
           watcher.unwatch(challenge.source);
-          drawGUI();
-          resolve();
+          const score = calculateScore(STATS);
+          GUI.unregisterPopup("source-error-popup");
+          GUI.unregisterControl("time-progress");
+          PROGRESS.delete();
+          ScorePopup(score, resolve);
         }
       }, 1000);
     });
-    console.log("after lock");
     await main(challenge, rules).catch(console.error);
-    console.log("after first main");
-    drawGUI();
-    console.log("after first draw");
+    drawGUI(GUI, PROGRESS);
 
     const watcher = chokidar.watch("challenges/*.js").on("change", async () => {
       await main(challenge, rules).catch(console.error);
-      drawGUI();
+      drawGUI(GUI, PROGRESS);
       onStatsChange(STATS);
     });
-
-    await lock;
+    return lock;
   },
 };
