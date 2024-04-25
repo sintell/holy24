@@ -250,7 +250,8 @@ module.exports = {
           timeLeft <= 0
         ) {
           clearInterval(guiInterval);
-          watcher.unwatch(challenge.source);
+          watcher.unwatch("challenge/*.js");
+          watcher.close();
           const score = calculateScore(STATS);
           GUI.unregisterPopup("source-error-popup");
           GUI.unregisterControl("time-progress");
