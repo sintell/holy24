@@ -1,8 +1,6 @@
 const { ESLint } = require("eslint");
 const Mocha = require("mocha");
 const chokidar = require("chokidar");
-const path = require("path");
-const { inspect } = require("util");
 
 const {
   ConsoleManager,
@@ -19,11 +17,10 @@ const noIfUseSwitchPlugin = require("eslint-plugin-no-if-use-switch");
 const binaryVariablesPlugin = require("eslint-rule");
 const sortVariablesPlugin = require("eslint-plugin-sort-vars-alphabetical");
 const maxVariablesPlugin = require("eslint-plugin-max-variables");
-const { title } = require("process");
 
-let STATS = { eslint: {}, mocha: {} };
+let STATS = { eslint: {}, mocha: {}, globalError: null };
 
-let TECH_STATS = { eslint: {}, mocha: {}, globalError: null };
+let TECH_STATS = { eslint: {}, mocha: {} };
 
 async function main(challenge, rules) {
   STATS.globalError = null;
@@ -43,43 +40,45 @@ async function main(challenge, rules) {
     },
   });
 
-  const mocha = new Mocha({ timeout: 1000, reporter: "min" });
-
+  const eslinted = await eslint.lintFiles([challenge.source]);
   try {
+    const mocha = new Mocha({ timeout: 1000, reporter: "min" });
+
     mocha.addFile(challenge.test);
     mocha.addFile(challenge.source);
+
+    const testsResult = await new Promise((resolve, reject) => {
+      const tests = [];
+      const errors = [];
+
+      const runner = mocha.run(() => resolve({ tests, errors }));
+      runner.on("test", (stat) => {
+        tests.push(stat);
+      });
+
+      runner.on("fail", (test, err) => {
+        errors.push({ test, err });
+      });
+    });
+    mocha.dispose();
+    TECH_STATS.mocha = testsResult;
+    STATS.mocha = {
+      total: testsResult.tests.length,
+      failed: testsResult.errors.length,
+    };
   } catch (e) {
     STATS.globalError = e;
+    return;
   }
-  const eslinted = await eslint.lintFiles([challenge.source]);
-
-  const testsResult = await new Promise((resolve, reject) => {
-    const tests = [];
-    const errors = [];
-
-    const runner = mocha.run(() => resolve({ tests, errors }));
-    runner.on("test", (stat) => {
-      tests.push(stat);
-    });
-
-    runner.on("fail", (test, err) => {
-      errors.push({ test, err });
-    });
-  });
-  mocha.dispose();
 
   TECH_STATS.eslint = eslinted;
-  TECH_STATS.mocha = testsResult;
 
   STATS.eslint = { failed: eslinted[0].errorCount, source: eslinted[0].source };
-  STATS.mocha = {
-    total: testsResult.tests.length,
-    failed: testsResult.errors.length,
-  };
 }
 
 function drawGUI(GUI, PROGRESS) {
   const PAGE = new PageBuilder({ title: "Stats" });
+  PAGE.addSpacer(1);
   PAGE.addRow(
     PROGRESS,
     { text: " " },
@@ -132,8 +131,9 @@ function drawGUI(GUI, PROGRESS) {
   GUI.setPage(PAGE);
 }
 
-function ErrorPopup(error) {
+function ErrorPopup() {
   const p = new PageBuilder();
+
   const popup = new CustomPopup({
     title: "Невалидный код",
     id: "source-error-popup",
@@ -143,12 +143,16 @@ function ErrorPopup(error) {
   });
 
   return {
+    popup,
     show: (error) => {
-      p.addRow({ text: error.message, color: red });
+      if (popup.isVisible()) {
+        return;
+      }
+
+      p.addRow({ text: error.message, color: "red" });
       error.stack.split("\n").forEach((l) => {
-        p.addRow({ text: l, color: "gray" });
+        p.addRow({ text: l, color: "white" });
       });
-      popup.setContent(p);
       popup.show();
     },
     hide: () => {
@@ -183,7 +187,8 @@ module.exports = {
     const GUI = new ConsoleManager({
       title: "Headhunter HolyJS 2024 Challenge",
       overrideConsole: true,
-      logPageSize: 0,
+      logPageSize: 10,
+      logLocation: "popup",
       layoutOptions: {
         fitHeight: true,
         type: "single",
@@ -194,8 +199,8 @@ module.exports = {
     const PROGRESS = new Progress({
       id: "time-progress",
       thickness: 1,
-      x: 1,
-      y: 1,
+      x: GUI.Terminal.columns / 2,
+      y: 2,
       length: 32,
       units: "sec",
       theme: "dart",
@@ -210,18 +215,20 @@ module.exports = {
         showTitle: true,
         theme: "precision",
         color: "blue",
-        showValue: true,
+        showValue: false,
       },
     });
 
     GUI.on("exit", () => {
       process.exit(0);
     });
-    STATS.totalTime = time * 60;
+
+    STATS.totalTime = time;
     const nowSec = Date.now() / 1000;
-    const maxSec = nowSec + time * 60;
-    PROGRESS.setMin(time * 60);
-    const errorPopup = new ErrorPopup();
+    const maxSec = nowSec + time;
+    PROGRESS.setMax(time);
+    PROGRESS.setMin(0);
+    const errorPopup = ErrorPopup();
 
     const lock = new Promise((resolve) => {
       const guiInterval = setInterval(() => {
