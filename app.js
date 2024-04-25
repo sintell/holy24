@@ -1,8 +1,8 @@
 const config = require("./configure");
 const server = require("./server");
 const fs = require("fs");
-const confirm = require("@inquirer/confirm").default;
 const game = require("./game");
+const path = require("path");
 
 async function cacheSource(sourcePath) {
   return new Promise((resolve, reject) => {
@@ -30,14 +30,19 @@ async function app() {
   const readyState = await config.getReadyState(name);
   if (readyState) {
     const score = await game.run(time, challenge, rules, onStatsChange);
-  }
-  try {
-    fs.writeFileSync(challenge.source, source);
-  } catch (err) {
-    console.error(err);
+    try {
+      fs.appendFileSync(
+        path.join(__dirname, "results.csv"),
+        `${name},${email},${score}\n`,
+      );
+      fs.writeFileSync(challenge.source, source);
+    } catch (err) {
+      console.error(err);
+      fs.writeFileSync("error.txt", err.message);
+    }
   }
   stop();
-  console.clear();
+  // console.clear();
   process.exit(0);
 }
 
