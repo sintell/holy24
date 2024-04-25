@@ -4,16 +4,42 @@
     <title></title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/styles/default.min.css"
+    />
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
     <link href="web/style.css" rel="stylesheet" />
     <script src="web/web.js"></script>
+    <script>
+      hljs.highlightAll();
+    </script>
   </head>
   <body>
-    <div><h1>ESLint errors:</h1></div>
-    <div><div id="eslint">0</div></div>
+    <div class="popup popup_closed">
+      <div class="popup-content"></div>
+    </div>
+    <div class="stats-bar">
+      <div class="stats-box">
+        <div id="user" class="user"></div>
+      </div>
+      <div class="stats-box">
+        <div id="time-left" class="time-left"></div>
+      </div>
 
-    <div><h1>Unit tests errors:</h1></div>
-    <div><div id="units">0</div></div>
-
-    <pre><code id="source"></code></pre>
+      <div class="stats-box">
+        <div class="stats-box-value-eslint failed">
+          <span id="eslint" class="stats-box-value">0</span>
+          <span class="stats-box-text">style errors</span>
+        </div>
+        <span class="stats-box-value stats-box-value-tests failed">
+          <span id="units-failed">0</span>/<span id="units-total">
+            0</span
+          ></span
+        >
+        <span class="stats-box-text">tests passed</span>
+      </div>
+    </div>
+    <pre class="code-box"><code id="source" class="language-js"></code></pre>
   </body>
 </html>

@@ -17,19 +17,30 @@ async function cacheSource(sourcePath) {
 }
 
 async function app() {
-  const { host, port, time, rules, challenge } = await config.getAppSettings();
-  console.log({ host, port, time, rules, challenge });
+  const { host, port, time, ruleset, challenge } =
+    await config.getAppSettings();
+  console.log({ host, port, time, ruleset, challenge });
 
   const { onStatsChange, stop } = server.run({ host, port });
+  onStatsChange({ prepare: { rules: ruleset.description } });
 
   const source = await cacheSource(challenge.source);
 
   console.clear();
   const { name, email } = await config.getChallengeSettings();
+  console.log("Правила:");
+  ruleset.description.forEach((rule) => console.log("-", rule));
 
   const readyState = await config.getReadyState(name);
   if (readyState) {
-    const score = await game.run(time, challenge, rules, onStatsChange);
+    const score = await game.run({
+      time,
+      challenge,
+      rules: ruleset.rules,
+      onStatsChange,
+      name,
+    });
+
     try {
       fs.appendFileSync(
         path.join(__dirname, "results.csv"),

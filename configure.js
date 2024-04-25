@@ -4,32 +4,49 @@ const path = require("path");
 
 module.exports = {
   getAppSettings: async () => {
-    const rules = [
+    const ruleset = [
       {
-        "max-variables/max-variables": ["error", 3],
-        "no-if-use-switch/no-if-use-switch": "error",
-        "secure-names/secure-names": ["error", { minLength: 5 }],
-        "odd-even-lines/odd-even-lines": "error",
+        rules: {
+          "max-variables/max-variables": ["error", 3],
+          "no-if-use-switch/no-if-use-switch": "error",
+          "secure-names/secure-names": ["error", { minLength: 5 }],
+          "odd-even-lines/odd-even-lines": "error",
+        },
+        description: [
+          "Можно использовать максимум 3 переменные",
+          "Нельзя использовать конструкции if/else или тернарный оператор",
+          "Имена переменных должны быть безопасными",
+          "На четных строках должно быть четное количество символов, на нечетных — нечетное",
+        ],
       },
       {
-        "sort-vars-alphabetical/sort-vars-alphabetical": "error",
-        "no-if-use-switch/no-if-use-switch": "error",
-        "oi10-name-plugin/oi10-name-plugin": "error",
-        "max-variables/max-variables": ["error", 3],
+        rules: {
+          "sort-vars-alphabetical/sort-vars-alphabetical": "error",
+          "no-if-use-switch/no-if-use-switch": "error",
+          "oi10-name-plugin/oi10-name-plugin": "error",
+          "max-variables/max-variables": ["error", 3],
+        },
+        description: [],
       },
       {
-        "odd-even-lines/odd-even-lines": "error",
-        "disable-variables-odd-lines/disable-variables-odd-lines": "error",
-        "no-if-use-switch/no-if-use-switch": "error",
-        "sort-vars-alphabetical/sort-vars-alphabetical": "error",
-        "max-variables/max-variables": ["error", 3],
+        rules: {
+          "odd-even-lines/odd-even-lines": "error",
+          "disable-variables-odd-lines/disable-variables-odd-lines": "error",
+          "no-if-use-switch/no-if-use-switch": "error",
+          "sort-vars-alphabetical/sort-vars-alphabetical": "error",
+          "max-variables/max-variables": ["error", 3],
+        },
+        description: [],
       },
       {
-        "odd-even-lines/odd-even-lines": "error",
-        "disable-variables-odd-lines/disable-variables-odd-lines": "error",
-        "no-if-use-switch/no-if-use-switch": "error",
-        "sort-vars-alphabetical/sort-vars-alphabetical": "error",
-        "max-variables/max-variables": ["error", 3],
+        rules: {
+          "odd-even-lines/odd-even-lines": "error",
+          "disable-variables-odd-lines/disable-variables-odd-lines": "error",
+          "no-if-use-switch/no-if-use-switch": "error",
+          "sort-vars-alphabetical/sort-vars-alphabetical": "error",
+          "max-variables/max-variables": ["error", 3],
+        },
+        description: [],
       },
     ];
 
@@ -39,7 +56,7 @@ module.exports = {
       host: config.host,
       port: config.port,
       time: config.taskTimeMinutes * 60,
-      rules: rules[config.ruleSet],
+      ruleset: ruleset[config.ruleSet],
       challenge: {
         source: path.join(
           __dirname,

@@ -1,6 +1,8 @@
 const { ESLint } = require("eslint");
 const Mocha = require("mocha");
 const chokidar = require("chokidar");
+const path = require("path");
+const fs = require("fs");
 
 const {
   ConsoleManager,
@@ -18,12 +20,19 @@ const binaryVariablesPlugin = require("eslint-rule");
 const sortVariablesPlugin = require("eslint-plugin-sort-vars-alphabetical");
 const maxVariablesPlugin = require("eslint-plugin-max-variables");
 
-let STATS = { eslint: {}, mocha: {}, globalError: null };
+let STATS = {
+  eslint: {},
+  mocha: {},
+  totalTime: 0,
+  timeLeft: 0,
+  sources: "",
+  user: "",
+};
 
-let TECH_STATS = { eslint: {}, mocha: {} };
+let TECH_STATS = { eslint: {}, mocha: {}, globalError: null };
 
 async function main(challenge, rules) {
-  STATS.globalError = null;
+  TECH_STATS.globalError = null;
   const eslint = new ESLint({
     overrideConfigFile: true,
     overrideConfig: {
@@ -67,7 +76,7 @@ async function main(challenge, rules) {
       failed: testsResult.errors.length,
     };
   } catch (e) {
-    STATS.globalError = e;
+    TECH_STATS.globalError = e;
     return;
   }
 
@@ -182,8 +191,20 @@ function ScorePopup(score, resolve) {
     });
 }
 
+const readSource = (sourcePath) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(sourcePath, "utf8", (err, source) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(source);
+      }
+    });
+  });
+};
+
 module.exports = {
-  run: async (time, challenge, rules, onStatsChange) => {
+  run: async ({ time, challenge, rules, onStatsChange, name }) => {
     const GUI = new ConsoleManager({
       title: "Headhunter HolyJS 2024 Challenge",
       overrideConsole: true,
@@ -223,13 +244,17 @@ module.exports = {
       process.exit(0);
     });
 
+    STATS.user = name;
     STATS.totalTime = time;
+    STATS.sources = await readSource(challenge.source);
+
     const nowSec = Date.now() / 1000;
     const maxSec = nowSec + time;
+
     PROGRESS.setMax(time);
     PROGRESS.setMin(0);
-    const errorPopup = ErrorPopup();
 
+    const errorPopup = ErrorPopup();
     const lock = new Promise((resolve) => {
       const guiInterval = setInterval(() => {
         const now = Date.now() / 1000;
@@ -239,8 +264,9 @@ module.exports = {
 
         PROGRESS.setValue(timeLeft);
         PROGRESS.setLabel(`${timeLeft} seconds left `);
-        if (STATS.globalError) {
-          errorPopup.show(STATS.globalError);
+        onStatsChange({ game: STATS });
+        if (TECH_STATS.globalError) {
+          errorPopup.show(TECH_STATS.globalError);
         } else {
           errorPopup.hide();
         }
@@ -253,9 +279,9 @@ module.exports = {
           watcher.unwatch("challenge/*.js");
           watcher.close();
           const score = calculateScore(STATS);
+          onStatsChange({ final: { user: name, score } });
           GUI.unregisterPopup("source-error-popup");
           GUI.unregisterControl("time-progress");
-          PROGRESS.delete();
           ScorePopup(score, resolve);
         }
       }, 1000);
@@ -263,11 +289,14 @@ module.exports = {
     await main(challenge, rules).catch(console.error);
     drawGUI(GUI, PROGRESS);
 
-    const watcher = chokidar.watch("challenges/*.js").on("change", async () => {
-      await main(challenge, rules).catch(console.error);
-      drawGUI(GUI, PROGRESS);
-      onStatsChange(STATS);
-    });
+    const watcher = chokidar
+      .watch("challenges/*.js")
+      .on("change", async (path) => {
+        await main(challenge, rules).catch(console.error);
+        drawGUI(GUI, PROGRESS);
+        STATS.sources = await readSource(challenge.source);
+        onStatsChange({ game: STATS });
+      });
     return lock;
   },
 };
