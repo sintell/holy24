@@ -1,4 +1,4 @@
-const cli = require("./cli");
+const config = require("./configure");
 const server = require("./server");
 const fs = require("fs");
 
@@ -15,7 +15,7 @@ async function cacheSource(sourcePath) {
 }
 
 async function main() {
-  const { host, port, time, rules, challenge } = await cli.getAppSettings();
+  const { host, port, time, rules, challenge } = await config.getAppSettings();
   console.log({ host, port, time, rules, challenge });
 
   const { onStatsChange, stop } = server.run({ host, port });
@@ -23,13 +23,13 @@ async function main() {
   const source = await cacheSource(challenge.source);
 
   console.clear();
-  const { name, email } = await cli.getChallengeSettings();
+  const { name, email } = await config.getChallengeSettings();
 
-  const readyState = await cli.getReadyState(name);
+  const readyState = await config.getReadyState(name);
   if (readyState) {
     const game = require("./game");
     const score = await game.run(time, challenge, rules, onStatsChange);
-    await cli.getScoreConfirm(score);
+    await config.getScoreConfirm(score);
     console.clear();
   }
   fs.writeFileSync(challenge.source, source);
