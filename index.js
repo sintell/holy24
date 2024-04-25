@@ -32,7 +32,11 @@ async function main() {
     await config.getScoreConfirm(score);
     console.clear();
   }
-  fs.writeFileSync(challenge.source, source);
+  try {
+    fs.writeFileSync(challenge.source, source);
+  } catch (err) {
+    console.error(err);
+  }
   stop();
 }
 
