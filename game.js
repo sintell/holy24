@@ -172,7 +172,7 @@ function ScorePopup(score, resolve) {
   const popup = new ButtonPopup({
     title: "Игра завершена",
     id: "score-popup",
-    message: `Твой счёт: ${score}`,
+    message: `Твой счёт: ${score}\n\n  Нажми "Ok", чтобы перезапустить игру  `,
     buttons: ["Ok"],
   })
     .show()

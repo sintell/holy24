@@ -29,8 +29,6 @@ async function main() {
   if (readyState) {
     const game = require("./game");
     const score = await game.run(time, challenge, rules, onStatsChange);
-    await config.getScoreConfirm(score);
-    console.clear();
   }
   try {
     fs.writeFileSync(challenge.source, source);
