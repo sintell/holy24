@@ -72,6 +72,11 @@ module.exports = {
       time: config.taskTimeMinutes * 60,
       ruleset: ruleset[forceRuleset || config.ruleSet],
       challenge: {
+        backup: path.join(
+          __dirname,
+          ".challenges_backup",
+          config.challengeSourceFilename,
+        ),
         source: path.join(
           __dirname,
           "challenges",

@@ -28,7 +28,7 @@ async function app() {
   const { onStatsChange, stop } = server.run({ host, port });
   onStatsChange({ prepare: { rules: ruleset.description } });
 
-  const source = await cacheSource(challenge.source);
+  const backup = await cacheSource(challenge.backup);
 
   console.clear();
   const { name, email } = await config.getChallengeSettings();
@@ -50,7 +50,7 @@ async function app() {
         path.join(__dirname, "results.csv"),
         `${name},${email},${score}\n`,
       );
-      fs.writeFileSync(challenge.source, source);
+      fs.writeFileSync(challenge.source, backup);
     } catch (err) {
       console.error(err);
       fs.writeFileSync("error.txt", err.message);
