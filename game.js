@@ -172,9 +172,10 @@ function ErrorPopup() {
 
 function calculateScore(stats) {
   const score = 100 - stats.eslint.failed * 5 - stats.mocha.failed * 10;
-  return Math.trunc(
+  const value = Math.trunc(
     score + (100 * stats.timeLeft * 100) / stats.totalTime / 100.0,
   );
+  return value > 1 ? value : 1;
 }
 
 function ScorePopup(score, resolve) {
