@@ -17,8 +17,12 @@ async function cacheSource(sourcePath) {
 }
 
 async function app() {
+  let forceRuleset = null;
+  if (process.argv.length > 2) {
+    forceRuleset = process.argv[2];
+  }
   const { host, port, time, ruleset, challenge } =
-    await config.getAppSettings();
+    await config.getAppSettings(forceRuleset);
   console.log({ host, port, time, ruleset, challenge });
 
   const { onStatsChange, stop } = server.run({ host, port });
