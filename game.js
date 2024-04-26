@@ -171,7 +171,16 @@ function ErrorPopup() {
 }
 
 function calculateScore(stats) {
-  const score = 100 - stats.eslint.failed * 5 - stats.mocha.failed * 10;
+  let score = 100;
+  if (stats.eslint.failed > 0) {
+    score -= 30;
+  }
+  if (stats.mocha.failed > 0) {
+    score -= 30;
+  }
+  if (stats.timeLeft <= 0) {
+    score -= 30;
+  }
   const value = Math.trunc(
     score + (100 * stats.timeLeft * 100) / stats.totalTime / 100.0,
   );
