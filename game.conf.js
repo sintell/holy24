@@ -8,5 +8,6 @@ module.exports = {
   // number, index of the ruleset; see configure.js
   ruleSet: 0,
   // string, filename for the challenge to run will be auto-converted to full path
-  challengeSourceFilename: "stack_challenge.js",
+  // challengeSourceFilename: "stack_challenge.js",
+  challengeSourceFilename: "quicksort_challenge.js",
 };

@@ -10,13 +10,13 @@ module.exports = {
           "max-variables/max-variables": ["error", 3],
           "no-if-use-switch/no-if-use-switch": "error",
           "secure-names/secure-names": ["error", { minLength: 5 }],
-          "odd-even-lines/odd-even-lines": "error",
+          "sort-vars-alphabetical/sort-vars-alphabetical": "error",
         },
         description: [
           "Можно использовать максимум 3 переменные",
           "Нельзя использовать конструкции if/else или тернарный оператор",
           "Имена переменных должны быть безопасными",
-          "На четных строках должно быть четное количество символов, на нечетных — нечетное",
+          "Переменные должны быть объявлены в алфавитном порядке",
         ],
       },
       {
